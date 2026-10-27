@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PLAB 브랜드 관리</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="config.js"></script>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#fff; --line:#e6e8ec; --line2:#d5d9df;
+  --ink:#16191d; --ink2:#4b525c; --ink3:#878e98;
+  --accent:#1f5eff; --accent-soft:#eaf0ff;
+  --warn:#c2410c; --warn-soft:#fff1e8; --ok:#15803d; --ok-soft:#e9f7ee;
+  --r:10px;
+  --s-상담:#64748b; --s-제안:#7c3aed; --s-계약:#1f5eff; --s-구축:#0891b2; --s-운영:#15803d; --s-보류:#b45309; --s-종료:#9ca3af;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+.hidden{display:none!important}
+
+/* 로그인 */
+#login{min-height:100vh;display:grid;place-items:center;padding:16px}
+.login-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:36px 32px;width:100%;max-width:380px;text-align:center}
+.login-card h1{font-size:20px;margin:14px 0 6px}
+.login-card p{color:var(--ink3);margin:0 0 24px;line-height:1.5}
+.mark{width:40px;height:40px;border-radius:10px;background:var(--ink);color:#fff;display:inline-grid;place-items:center;font-weight:800;letter-spacing:-.5px}
+#gbtn{display:flex;justify-content:center}
+.login-err{color:var(--warn);margin-top:14px;font-size:13px}
+
+/* 상단 */
+header{position:sticky;top:0;z-index:5;background:rgba(246,247,249,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{max-width:1240px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:12px}
+.bar .mark{width:28px;height:28px;border-radius:7px;font-size:12px}
+.bar h1{font-size:16px;margin:0;font-weight:700}
+.bar .sp{flex:1}
+.me{color:var(--ink3);font-size:13px}
+.btn{border:1px solid var(--line2);background:var(--panel);border-radius:8px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--ink3)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:#000}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--ink2)}
+.btn.danger{color:var(--warn)}
+.btn:disabled{opacity:.5;cursor:default}
+
+main{max-width:1240px;margin:0 auto;padding:20px}
+
+/* 요약 */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.stat .k{color:var(--ink3);font-size:12px}
+.stat .v{font-size:22px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.stat .v small{font-size:13px;color:var(--ink3);font-weight:500;margin-left:4px}
+.stat.warn .v{color:var(--warn)}
+
+/* 파이프라인 */
+.pipe{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+.chip .n{color:var(--ink3);font-variant-numeric:tabular-nums}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip.on .n{color:#c9ced6}
+
+.tools{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.tools input,.tools select{border:1px solid var(--line2);background:var(--panel);border-radius:8px;padding:8px 10px}
+.tools input{flex:1;min-width:200px}
+
+/* 목록 */
+.table{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;color:var(--ink3);font-weight:600;background:#fafbfc;cursor:pointer;user-select:none;white-space:nowrap}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#fafbfc}
+tbody tr:last-child td{border-bottom:none}
+.bname{font-weight:600}
+.bsub{color:var(--ink3);font-size:12px;margin-top:2px}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.muted{color:var(--ink3)}
+.stage{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:#f1f3f5;white-space:nowrap}
+.stage .dot{width:7px;height:7px;border-radius:50%}
+.due{color:var(--warn);font-weight:600}
+.pill{font-size:11px;padding:2px 7px;border-radius:999px;font-weight:600}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.empty{padding:48px 16px;text-align:center;color:var(--ink3)}
+
+/* 카드형(모바일) */
+.cards{display:none}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:8px;cursor:pointer}
+.card .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card .meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--ink3);font-size:12px;margin-top:8px}
+
+/* 상세 패널 */
+.scrim{position:fixed;inset:0;background:rgba(15,18,22,.32);z-index:10}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--panel);z-index:11;display:flex;flex-direction:column;box-shadow:-12px 0 32px rgba(0,0,0,.08)}
+.dh{padding:18px 20px 0;border-bottom:1px solid var(--line)}
+.dh .top{display:flex;align-items:flex-start;gap:10px}
+.dh h2{margin:0;font-size:19px;flex:1;word-break:keep-all}
+.tabs{display:flex;gap:2px;margin-top:14px}
+.tab{border:none;background:none;padding:10px 12px;cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent;font-weight:600}
+.tab.on{color:var(--ink);border-color:var(--ink)}
+.db{flex:1;overflow:auto;padding:20px}
+.df{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.df .sp{flex:1}
+
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.form .full{grid-column:1/-1}
+.form h3{grid-column:1/-1;font-size:12px;color:var(--ink3);margin:10px 0 -4px;font-weight:600;letter-spacing:.02em}
+.form h3:first-child{margin-top:0}
+label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink2)}
+label input,label select,label textarea{border:1px solid var(--line2);border-radius:8px;padding:9px 10px;background:#fff;font-size:14px;color:var(--ink)}
+label textarea{min-height:84px;resize:vertical}
+label input:focus,label select:focus,label textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.hint{color:var(--ink3);font-size:11px}
+
+/* 활동기록 */
+.compose{border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:18px;display:grid;gap:8px}
+.compose .r{display:flex;gap:8px}
+.compose select,.compose input{border:1px solid var(--line2);border-radius:8px;padding:8px 10px}
+.compose textarea{border:1px solid var(--line2);border-radius:8px;padding:9px 10px;min-height:70px;resize:vertical}
+.tl{list-style:none;margin:0;padding:0;position:relative}
+.tl li{position:relative;padding:0 0 18px 22px}
+.tl li::before{content:"";position:absolute;left:5px;top:6px;bottom:-6px;width:1px;background:var(--line)}
+.tl li:last-child::before{display:none}
+.tl li::after{content:"";position:absolute;left:1px;top:5px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid var(--ink3)}
+.tl li.sys::after{border-color:var(--accent)}
+.tl .h{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink3)}
+.tl .t{font-weight:600;color:var(--ink2)}
+.tl .c{margin-top:4px;white-space:pre-wrap;line-height:1.55}
+.tl .x{margin-left:auto;border:none;background:none;color:var(--ink3);cursor:pointer;font-size:12px}
+
+/* 입금 */
+.isum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.isum div{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.isum .k{font-size:12px;color:var(--ink3)}
+.isum .v{font-weight:700;font-size:16px;margin-top:2px;font-variant-numeric:tabular-nums}
+.isum .w .v{color:var(--warn)}
+.note{background:#fafbfc;border:1px solid var(--line);border-radius:var(--r);padding:12px;color:var(--ink2);line-height:1.55;font-size:13px}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;z-index:20;font-size:13px;max-width:calc(100% - 32px)}
+.toast.err{background:var(--warn)}
+.loading{padding:40px;text-align:center;color:var(--ink3)}
+
+@media (max-width:820px){
+  .stats{grid-template-columns:1fr 1fr}
+  .table{display:none}
+  .cards{display:block}
+  .bar{padding:10px 16px}
+  main{padding:16px}
+  .me{display:none}
+  .form{grid-template-columns:1fr}
+  .isum{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- 로그인 -->
+<section id="login">
+  <div class="login-card">
+    <span class="mark">PL</span>
+    <h1>브랜드 관리</h1>
+    <p>고객사 브랜드의 진행 단계·계약·입금·활동 기록을<br>한 곳에서 관리합니다.</p>
+    <div id="gbtn"></div>
+    <div id="loginErr" class="login-err"></div>
+  </div>
+</section>
+
+<!-- 앱 -->
+<section id="app" class="hidden">
+  <header>
+    <div class="bar">
+      <span class="mark">PL</span>
+      <h1>브랜드 관리</h1>
+      <span class="sp"></span>
+      <span class="me" id="me"></span>
+      <button class="btn ghost" id="refresh" title="새로고침">새로고침</button>
+      <button class="btn primary" id="addBtn">+ 브랜드 등록</button>
+    </div>
+  </header>
+  <main>
+    <div class="stats" id="stats"></div>
+    <div class="pipe" id="pipe"></div>
+    <div class="tools">
+      <input id="q" type="search" placeholder="브랜드명·법인명·담당자 검색">
+      <select id="owner"><option value="">우리 담당자 전체</option></select>
+      <select id="sort">
+        <option value="recent">최근 활동순</option>
+        <option value="name">이름순</option>
+        <option value="unpaid">미입금 많은순</option>
+        <option value="end">계약 종료 임박순</option>
+      </select>
+    </div>
+    <div class="table">
+      <table>
+        <thead><tr>
+          <th>브랜드</th><th>진행 단계</th><th>우리 담당자</th><th>고객 담당자</th>
+          <th>계약 기간</th><th class="num">계약금액</th><th class="num">미입금</th><th>최근 활동</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="cards" id="cards"></div>
+  </main>
+</section>
+
+<!-- 상세 -->
+<div id="scrim" class="scrim hidden"></div>
+<aside id="drawer" class="drawer hidden" aria-modal="true" role="dialog">
+  <div class="dh">
+    <div class="top">
+      <h2 id="dTitle">브랜드</h2>
+      <button class="btn ghost" id="dClose" aria-label="닫기">닫기</button>
+    </div>
+    <div class="tabs" id="dTabs">
+      <button class="tab on" data-t="info">기본정보</button>
+      <button class="tab" data-t="act">활동기록</button>
+      <button class="tab" data-t="pay">입금·세금계산서</button>
+    </div>
+  </div>
+  <div class="db" id="dBody"></div>
+  <div class="df" id="dFoot"></div>
+</aside>
+
+<script>
+(() => {
+  const CFG = window.PLAB_BRAND_CONFIG || {};
+  const ACT_TYPES = ['미팅', '통화', '메일', '요청사항', '이슈', '기타'];
+  const S = { token: null, user: null, brands: [], stages: [], incomeLinked: false,
+              stage: '', q: '', owner: '', sort: 'recent', cur: null, tab: 'info' };
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const won = n => (Number(n) || 0).toLocaleString('ko-KR');
+  const today = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const nowLocal = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16);
+
+  // ---------- 토스트 ----------
+  let tt;
+  function toast(msg, err) {
+    let el = document.querySelector('.toast');
+    if (!el) { el = document.createElement('div'); el.className = 'toast'; document.body.appendChild(el); }
+    el.textContent = msg; el.classList.toggle('err', !!err); el.classList.remove('hidden');
+    clearTimeout(tt); tt = setTimeout(() => el.classList.add('hidden'), 2600);
+  }
+
+  // ---------- 로그인 ----------
+  function initLogin() {
+    if (!window.google || !google.accounts) return setTimeout(initLogin, 150);
+    google.accounts.id.initialize({ client_id: CFG.CLIENT_ID, callback: onCred, hd: 'plabsolution.com', auto_select: true });
+    google.accounts.id.renderButton($('gbtn'), { theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill', locale: 'ko' });
+    let saved = null;
+    try { saved = sessionStorage.getItem('plab_brand_token'); } catch (e) {}
+    if (saved) { S.token = saved; boot(); } else google.accounts.id.prompt();
+  }
+  function onCred(r) {
+    S.token = r.credential;
+    try { sessionStorage.setItem('plab_brand_token', S.token); } catch (e) {}
+    boot();
+  }
+  function logout(msg) {
+    S.token = null;
+    try { sessionStorage.removeItem('plab_brand_token'); } catch (e) {}
+    $('app').classList.add('hidden'); $('login').classList.remove('hidden');
+    closeDrawer();
+    $('loginErr').textContent = msg || '';
+  }
+
+  // ---------- API ----------
+  async function api(action, payload) {
+    const res = await fetch(CFG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ token: S.token, action, payload: payload || {} })
+    });
+    const j = await res.json();
+    if (!j.ok) {
+      if (j.error === 'TOKEN_EXPIRED' || j.error === 'LOGIN_REQUIRED') { logout('로그인이 만료되었습니다. 다시 로그인해 주세요.'); throw new Error('silent'); }
+      if (j.error === 'NO_ACCESS') { logout('이 페이지에 접근 권한이 없습니다. 운영기획팀에 요청해 주세요.'); throw new Error('silent'); }
+      throw new Error(j.error);
+    }
+    if (j.user) S.user = j.user;
+    return j.data;
+  }
+  const fail = e => { if (e.message !== 'silent') toast(e.message || '요청에 실패했습니다.', true); };
+
+  async function boot() {
+    $('login').classList.add('hidden'); $('app').classList.remove('hidden');
+    $('rows').innerHTML = '<tr><td colspan="8" class="loading">불러오는 중…</td></tr>';
+    $('cards').innerHTML = '<div class="loading">불러오는 중…</div>';
+    await load();
+  }
+  async function load() {
+    try {
+      const d = await api('list');
+      S.brands = d.brands; S.stages = d.stages; S.incomeLinked = d.incomeLinked;
+      if (d.incomeError) console.warn('입금 시트 연결 오류:', d.incomeError);
+      $('me').textContent = S.user ? S.user.name : '';
+      fillOwners(); render();
+    } catch (e) { fail(e); }
+  }
+
+  // ---------- 목록 ----------
+  const stageColor = s => `var(--s-${s}, #9ca3af)`;
+  const stageTag = s => `<span class="stage"><span class="dot" style="background:${stageColor(s)}"></span>${esc(s || '-')}</span>`;
+  const unpaid = b => (b.입금 && b.입금.미입금) || 0;
+  const daysTo = d => d ? Math.round((new Date(d) - new Date(today())) / 864e5) : null;
+
+  function fillOwners() {
+    const sel = $('owner'), cur = sel.value;
+    const owners = [...new Set(S.brands.map(b => b.우리담당자).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">우리 담당자 전체</option>' + owners.map(o => `<option${o === cur ? ' selected' : ''}>${esc(o)}</option>`).join('');
+  }
+
+  function filtered() {
+    const q = S.q.trim().toLowerCase();
+    let list = S.brands.filter(b =>
+      (!S.stage || b.진행단계 === S.stage) &&
+      (!S.owner || b.우리담당자 === S.owner) &&
+      (!q || [b.브랜드명, b.법인명, b.고객담당자, b.우리담당자, b.업종].join(' ').toLowerCase().includes(q)));
+    const by = {
+      recent: (a, b) => (b.최근활동 || b.수정일 || '').localeCompare(a.최근활동 || a.수정일 || ''),
+      name:   (a, b) => a.브랜드명.localeCompare(b.브랜드명, 'ko'),
+      unpaid: (a, b) => unpaid(b) - unpaid(a),
+      end:    (a, b) => (a.계약종료 || '9999').localeCompare(b.계약종료 || '9999')
+    };
+    return list.sort(by[S.sort]);
+  }
+
+  function render() {
+    // 요약
+    const active = S.brands.filter(b => !['보류', '종료'].includes(b.진행단계));
+    const soon = S.brands.filter(b => { const d = daysTo(b.계약종료); return d !== null && d >= 0 && d <= 30; });
+    const totUnpaid = S.brands.reduce((s, b) => s + unpaid(b), 0);
+    const unpaidCnt = S.brands.filter(b => unpaid(b) > 0).length;
+    $('stats').innerHTML = `
+      <div class="stat"><div class="k">전체 브랜드</div><div class="v">${S.brands.length}<small>곳</small></div></div>
+      <div class="stat"><div class="k">진행 중 (보류·종료 제외)</div><div class="v">${active.length}<small>곳</small></div></div>
+      <div class="stat${soon.length ? ' warn' : ''}"><div class="k">30일 내 계약 종료</div><div class="v">${soon.length}<small>곳</small></div></div>
+      <div class="stat${totUnpaid ? ' warn' : ''}"><div class="k">미입금 합계${S.incomeLinked ? '' : ' (입금 시트 미연결)'}</div>
+        <div class="v">${S.incomeLinked ? won(totUnpaid) + '<small>원 · ' + unpaidCnt + '곳</small>' : '–'}</div></div>`;
+
+    // 단계 칩
+    const cnt = s => S.brands.filter(b => b.진행단계 === s).length;
+    $('pipe').innerHTML = `<button class="chip${S.stage ? '' : ' on'}" data-s="">전체 <span class="n">${S.brands.length}</span></button>` +
+      S.stages.map(s => `<button class="chip${S.stage === s ? ' on' : ''}" data-s="${esc(s)}"><span class="dot" style="background:${stageColor(s)}"></span>${esc(s)} <span class="n">${cnt(s)}</span></button>`).join('');
+
+    // 목록
+    const list = filtered();
+    if (!list.length) {
+      const msg = S.brands.length ? '조건에 맞는 브랜드가 없습니다.' : '아직 등록된 브랜드가 없습니다. 오른쪽 위 <b>+ 브랜드 등록</b>으로 시작하세요.';
+      $('rows').innerHTML = `<tr><td colspan="8" class="empty">${msg}</td></tr>`;
+      $('cards').innerHTML = `<div class="empty">${msg}</div>`;
+      return;
+    }
+    const period = b => {
+      if (!b.계약시작 && !b.계약종료) return '<span class="muted">-</span>';
+      const d = daysTo(b.계약종료);
+      const end = d !== null && d >= 0 && d <= 30 ? `<span class="due">${esc(b.계약종료)} (D-${d})</span>` : esc(b.계약종료 || '');
+      return `${esc(b.계약시작 || '')} ~ ${end}`;
+    };
+    const unpaidCell = b => !S.incomeLinked ? '<span class="muted">-</span>'
+      : unpaid(b) ? `<span class="pill warn">${won(unpaid(b))}원 · ${b.입금.미입금건수}건</span>`
+      : b.입금.건수 ? '<span class="pill ok">완납</span>' : '<span class="muted">-</span>';
+    const last = b => b.최근활동 ? esc(b.최근활동.slice(0, 10)) : '<span class="muted">-</span>';
+
+    $('rows').innerHTML = list.map(b => `
+      <tr data-id="${esc(b.ID)}">
+        <td><div class="bname">${esc(b.브랜드명)}</div><div class="bsub">${esc([b.법인명, b.업종].filter(Boolean).join(' · '))}</div></td>
+        <td>${stageTag(b.진행단계)}</td>
+        <td>${esc(b.우리담당자) || '<span class="muted">-</span>'}</td>
+        <td>${esc(b.고객담당자) || '<span class="muted">-</span>'}</td>
+        <td>${period(b)}</td>
+        <td class="num">${b.계약금액 ? won(b.계약금액) : '<span class="muted">-</span>'}</td>
+        <td class="num">${unpaidCell(b)}</td>
+        <td>${last(b)}</td>
+      </tr>`).join('');
+    $('cards').innerHTML = list.map(b => `
+      <div class="card" data-id="${esc(b.ID)}">
+        <div class="row"><div><div class="bname">${esc(b.브랜드명)}</div><div class="bsub">${esc(b.법인명 || '')}</div></div>${stageTag(b.진행단계)}</div>
+        <div class="meta"><span>담당 ${esc(b.우리담당자 || '-')}</span><span>최근 ${last(b)}</span>${S.incomeLinked && unpaid(b) ? `<span class="pill warn">미입금 ${won(unpaid(b))}원</span>` : ''}</div>
+      </div>`).join('');
+  }
+
+  // ---------- 상세 패널 ----------
+  function openDrawer(b, tab) {
+    S.cur = b ? { ...b } : { ID: '', 진행단계: '상담', 우리담당자: S.user ? S.user.name : '' };
+    S.tab = b ? (tab || 'info') : 'info';
+    $('dTitle').textContent = b ? b.브랜드명 : '새 브랜드 등록';
+    $('dTabs').classList.toggle('hidden', !b);
+    $('scrim').classList.remove('hidden'); $('drawer').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    showTab();
+  }
+  function closeDrawer() {
+    $('scrim').classList.add('hidden'); $('drawer').classList.add('hidden');
+    document.body.style.overflow = ''; S.cur = null;
+  }
+  function showTab() {
+    [...$('dTabs').children].forEach(t => t.classList.toggle('on', t.dataset.t === S.tab));
+    ({ info: tabInfo, act: tabAct, pay: tabPay })[S.tab]();
+  }
+
+  const F = (k, label, type = 'text', cls = '', extra = '') =>
+    `<label class="${cls}">${label}<input name="${k}" type="${type}" value="${esc(S.cur[k] || '')}" ${extra}></label>`;
+
+  function tabInfo() {
+    const b = S.cur;
+    $('dBody').innerHTML = `
+      <form class="form" id="bf" autocomplete="off">
+        <h3>브랜드</h3>
+        ${F('브랜드명', '브랜드명 *', 'text', '', 'required')}
+        <label>진행 단계<select name="진행단계">${S.stages.map(s => `<option${s === b.진행단계 ? ' selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
+        ${F('법인명', '법인명')}
+        ${F('사업자번호', '사업자등록번호', 'text', '', 'placeholder="000-00-00000"')}
+        ${F('업종', '업종', 'text', '', 'placeholder="예: 외식 프랜차이즈"')}
+        ${F('우리담당자', '우리 담당자')}
+        ${F('주소', '주소', 'text', 'full')}
+        <h3>고객 담당자</h3>
+        ${F('고객담당자', '이름·직책')}
+        ${F('고객연락처', '연락처', 'tel')}
+        ${F('고객이메일', '이메일', 'email', 'full')}
+        <h3>계약</h3>
+        ${F('계약시작', '계약 시작일', 'date')}
+        ${F('계약종료', '계약 종료일', 'date')}
+        ${F('계약금액', '계약금액 (원, VAT 포함)', 'text', '', 'inputmode="numeric"')}
+        <label>입금 표기명<input name="입금표기명" value="${esc(b.입금표기명 || '')}" placeholder="쉼표로 여러 개">
+          <span class="hint">입금 시트에 브랜드명과 다르게 적힌 경우</span></label>
+        <label class="full">메모<textarea name="메모">${esc(b.메모 || '')}</textarea></label>
+      </form>
+      ${b.ID ? `<p class="hint" style="margin-top:14px">등록 ${esc(b.등록일)} · 최근 수정 ${esc(b.수정일)} (${esc(b.수정자)})</p>` : ''}`;
+    const amt = $('bf').querySelector('[name=계약금액]');
+    amt.value = amt.value ? won(String(amt.value).replace(/[^0-9]/g, '')) : '';
+    amt.addEventListener('input', () => { const n = amt.value.replace(/[^0-9]/g, ''); amt.value = n ? won(n) : ''; });
+
+    $('dFoot').innerHTML = `${b.ID ? '<button class="btn danger" id="del">삭제</button>' : ''}<span class="sp"></span>
+      <button class="btn" id="cancel">취소</button><button class="btn primary" id="save">${b.ID ? '저장' : '등록'}</button>`;
+    $('cancel').onclick = closeDrawer;
+    $('save').onclick = saveBrand;
+    if ($('del')) $('del').onclick = deleteBrand;
+  }
+
+  async function saveBrand() {
+    const fd = new FormData($('bf'));
+    const o = Object.fromEntries(fd.entries());
+    if (!o.브랜드명.trim()) return toast('브랜드명을 입력하세요.', true);
+    o.계약금액 = o.계약금액.replace(/[^0-9]/g, '');
+    o.ID = S.cur.ID;
+    $('save').disabled = true;
+    try {
+      const saved = await api('saveBrand', { brand: o });
+      toast(S.cur.ID ? '저장했습니다.' : '등록했습니다.');
+      await load();
+      const fresh = S.brands.find(b => b.ID === saved.ID);
+      if (fresh) { S.cur = { ...fresh }; $('dTitle').textContent = fresh.브랜드명; $('dTabs').classList.remove('hidden'); showTab(); }
+    } catch (e) { fail(e); } finally { if ($('save')) $('save').disabled = false; }
+  }
+
+  async function deleteBrand() {
+    if (!confirm(`'${S.cur.브랜드명}' 브랜드와 활동기록을 모두 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    try { await api('deleteBrand', { id: S.cur.ID }); toast('삭제했습니다.'); closeDrawer(); await load(); }
+    catch (e) { fail(e); }
+  }
+
+  async function tabAct() {
+    $('dFoot').innerHTML = '';
+    $('dBody').innerHTML = `
+      <div class="compose">
+        <div class="r">
+          <select id="aType">${ACT_TYPES.map(t => `<option>${t}</option>`).join('')}</select>
+          <input id="aWhen" type="datetime-local" value="${nowLocal()}" style="flex:1">
+        </div>
+        <textarea id="aText" placeholder="미팅 내용, 요청사항, 다음 할 일 등을 남겨 주세요"></textarea>
+        <div style="text-align:right"><button class="btn primary" id="aAdd">기록 추가</button></div>
+      </div>
+      <ul class="tl" id="tl"><li class="loading" style="padding:0">불러오는 중…</li></ul>`;
+    $('aAdd').onclick = addAct;
+    await loadActs();
+  }
+  async function loadActs() {
+    const id = S.cur.ID;
+    try {
+      const list = await api('activities', { brandId: id });
+      if (!S.cur || S.cur.ID !== id || S.tab !== 'act') return;
+      $('tl').innerHTML = list.length ? list.map(a => `
+        <li class="${a.유형 === '단계변경' ? 'sys' : ''}">
+          <div class="h"><span class="t">${esc(a.유형)}</span><span>${esc(a.일시)}</span><span>${esc((a.작성자 || '').split('@')[0])}</span>
+            ${S.user && a.작성자 === S.user.email && a.유형 !== '단계변경' ? `<button class="x" data-id="${esc(a.ID)}">삭제</button>` : ''}</div>
+          <div class="c">${esc(a.내용)}</div>
+        </li>`).join('') : '<li class="muted" style="padding-left:0">아직 기록이 없습니다.</li>';
+    } catch (e) { fail(e); }
+  }
+  async function addAct() {
+    const text = $('aText').value.trim();
+    if (!text) return toast('내용을 입력하세요.', true);
+    $('aAdd').disabled = true;
+    try {
+      await api('addActivity', { brandId: S.cur.ID, 유형: $('aType').value, 일시: $('aWhen').value, 내용: text });
+      $('aText').value = ''; toast('기록했습니다.');
+      await loadActs(); load();
+    } catch (e) { fail(e); } finally { $('aAdd').disabled = false; }
+  }
+
+  async function tabPay() {
+    $('dFoot').innerHTML = '';
+    $('dBody').innerHTML = '<div class="loading">불러오는 중…</div>';
+    const id = S.cur.ID;
+    try {
+      const d = await api('income', { brandId: id });
+      if (!S.cur || S.cur.ID !== id || S.tab !== 'pay') return;
+      if (!d.linked) {
+        $('dBody').innerHTML = '<div class="note">입출금 관리 시트가 아직 연결되지 않았습니다.<br>Apps Script의 <b>CONFIG.INCOME.SHEET_ID</b>에 시트 ID를 넣으면 이 브랜드의 세금계산서 발행·입금 내역이 여기 표시됩니다.</div>';
+        return;
+      }
+      const s = d.summary;
+      $('dBody').innerHTML = `
+        <div class="isum">
+          <div><div class="k">발행 합계 (${s.건수}건)</div><div class="v">${won(s.발행)}원</div></div>
+          <div><div class="k">입금 완료</div><div class="v">${won(s.입금)}원</div></div>
+          <div class="${s.미입금 ? 'w' : ''}"><div class="k">미입금 (${s.미입금건수}건)</div><div class="v">${won(s.미입금)}원</div></div>
+        </div>
+        ${d.rows.length ? `<div class="table" style="display:block"><table>
+          <thead><tr><th>월</th><th>사유</th><th class="num">금액</th><th>발행일</th><th>입금</th></tr></thead>
+          <tbody>${d.rows.map(r => `<tr style="cursor:default"><td>${esc(r.년월) || '-'}</td><td>${esc(r.품목) || '-'}</td>
+            <td class="num">${won(r.금액)}</td><td>${esc(r.발행일) || '<span class="muted">미발행</span>'}</td><td>${r.입금 ? `<span class="pill ok">${esc(r.입금일 && r.입금일 !== 'true' ? r.입금일 : '완료')}</span>` : '<span class="pill warn">미입금</span>'}</td></tr>`).join('')}</tbody>
+        </table></div>`
+        : `<div class="note">입금 시트에서 이 브랜드와 일치하는 줄을 찾지 못했습니다.<br>시트에 다른 이름으로 적혀 있다면 <b>기본정보 › 입금 표기명</b>에 그 이름을 넣어 주세요.</div>`}
+        <p class="hint" style="margin-top:12px">입출금 관리 시트의 '입금' 탭을 읽어서 보여줍니다. 수정은 원본 시트에서 해 주세요.</p>`;
+    } catch (e) { fail(e); }
+  }
+
+  // ---------- 이벤트 ----------
+  $('pipe').onclick = e => { const c = e.target.closest('.chip'); if (c) { S.stage = c.dataset.s; render(); } };
+  $('q').oninput = e => { S.q = e.target.value; render(); };
+  $('owner').onchange = e => { S.owner = e.target.value; render(); };
+  $('sort').onchange = e => { S.sort = e.target.value; render(); };
+  const openRow = e => { const r = e.target.closest('[data-id]'); if (r) openDrawer(S.brands.find(b => b.ID === r.dataset.id)); };
+  $('rows').onclick = openRow; $('cards').onclick = openRow;
+  $('addBtn').onclick = () => openDrawer(null);
+  $('refresh').onclick = () => load().then(() => toast('새로 불러왔습니다.'));
+  $('dClose').onclick = closeDrawer; $('scrim').onclick = closeDrawer;
+  $('dTabs').onclick = e => { const t = e.target.closest('.tab'); if (t) { S.tab = t.dataset.t; showTab(); } };
+  $('dBody').addEventListener('click', async e => {
+    const x = e.target.closest('.x'); if (!x) return;
+    if (!confirm('이 기록을 삭제할까요?')) return;
+    try { await api('deleteActivity', { id: x.dataset.id }); toast('삭제했습니다.'); await loadActs(); load(); } catch (er) { fail(er); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && S.cur) closeDrawer(); });
+
+  if (!CFG.CLIENT_ID || !CFG.API_URL) {
+    $('loginErr').innerHTML = 'config.js에 CLIENT_ID와 API_URL을 먼저 넣어 주세요.';
+  } else initLogin();
+})();
+</script>
+</body>
+</html>
